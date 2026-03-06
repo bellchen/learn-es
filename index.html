@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>腾讯云 ES 知识工坊 - Elasticsearch Service 学习平台</title>
+  <meta name="description" content="系统学习腾讯云 Elasticsearch Service（ES）的核心知识，涵盖集群架构、搜索查询、数据分析、向量搜索等。150个核心知识点，从入门到精通，掌握云端搜索与数据分析服务。">
+  <meta name="keywords" content="腾讯云,Elasticsearch,ES,搜索引擎,数据分析,向量搜索,Kibana,日志分析,云服务,学习">
+  <meta name="author" content="腾讯云 ES 知识工坊">
+  <meta name="language" content="zh-CN">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://learn-es.vercel.app/">
+  <meta property="og:title" content="腾讯云 ES 知识工坊 - Elasticsearch Service 学习平台">
+  <meta property="og:description" content="150个核心知识点，系统掌握腾讯云 Elasticsearch Service 搜索与数据分析服务">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://learn-es.vercel.app/">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="腾讯云 ES 知识工坊">
+  <meta name="twitter:description" content="150个核心知识点，系统学习 Elasticsearch Service">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FBBF24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ES工坊">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/minimal.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">🔍 腾讯云 ES 知识工坊</a>
+      <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links">
+        <a href="learn.html" class="nav-link">学习</a>
+        <a href="flashcard.html" class="nav-link">闪卡</a>
+        <a href="roots.html" class="nav-link">索引</a>
+        <a href="progress.html" class="nav-link">进度</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <div class="demo-container" id="demoContainer">
+          <div class="demo-word" id="demoWord">Elasticsearch Service</div>
+          <div class="demo-meaning" id="demoMeaning">腾讯云全托管搜索与数据分析服务</div>
+        </div>
+        <h1 class="hero-title">
+          <span class="accent">150个核心知识点</span><br>
+          掌握云端搜索与<br>
+          数据分析服务
+        </h1>
+        <p class="hero-subtitle">系统学习腾讯云 Elasticsearch Service，涵盖集群架构、搜索查询、数据分析、向量搜索、日志增强等核心知识</p>
+        <div class="cta-group">
+          <a href="learn.html" class="btn btn-primary btn-large">开始第一个知识点 →</a>
+          <a href="flashcard.html" class="btn btn-secondary btn-large">闪卡复习</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-value">150</div>
+        <div class="stat-label">知识点</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">17</div>
+        <div class="stat-label">主题分类</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">15分钟</div>
+        <div class="stat-label">每日学习</div>
+      </div>
+    </section>
+
+    <section class="demo-section">
+      <h2 class="demo-section-title">核心知识点预览</h2>
+      <div class="demo-cards" id="demoCards"></div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="footer-tagline">像搜索引擎一样理解你的数据</div>
+      <p class="footer-description">基于腾讯云 Elasticsearch Service 官方文档，系统梳理搜索与数据分析的核心知识。从集群架构到向量搜索，从日志分析到性能优化，帮助你全面掌握云端 ES 服务的使用与运维。</p>
+      <div style="margin-top:32px;">
+        <a href="learn.html" class="btn btn-primary">开始学习</a>
+      </div>
+    </footer>
+  </main>
+
+  <script src="js/wordData.js"></script>
+  <script src="js/siteConfig.js"></script>
+  <script>
+    (function() {
+      var examples = WordRoots.slice(0, 5).map(function(root) {
+        return { word: root.root, meaning: root.meaning };
+      });
+
+      var currentIndex = 0;
+      var demoWord = document.getElementById('demoWord');
+      var demoMeaning = document.getElementById('demoMeaning');
+
+      function updateDemo() {
+        if (!demoWord || !demoMeaning) return;
+        var example = examples[currentIndex];
+        demoWord.style.opacity = '0';
+        demoMeaning.style.opacity = '0';
+        setTimeout(function() {
+          demoWord.textContent = example.word;
+          demoMeaning.textContent = example.meaning;
+          demoWord.style.opacity = '1';
+          demoMeaning.style.opacity = '1';
+        }, 300);
+        currentIndex = (currentIndex + 1) % examples.length;
+      }
+
+      setInterval(updateDemo, 4000);
+
+      function loadDemoCards() {
+        var container = document.getElementById('demoCards');
+        if (!container) return;
+        var demoItems = WordRoots.slice(0, 5);
+        container.innerHTML = demoItems.map(function(item, i) {
+          return '<div class="demo-card" style="animation-delay:' + (i * 0.1) + 's" onclick="window.location.href=\'root-detail.html?id=' + item.id + '\'">' +
+            '<div class="demo-card-header">' +
+              '<h3 class="demo-card-title">' + item.root + '</h3>' +
+              '<span class="demo-card-category">' + item.origin + '</span>' +
+            '</div>' +
+            '<p class="demo-card-description">' + item.meaning + '</p>' +
+          '</div>';
+        }).join('');
+      }
+
+      loadDemoCards();
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('sw.js').catch(function(err) {
+            console.log('SW registration failed:', err);
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

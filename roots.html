@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知识索引 - 腾讯云 ES 知识工坊</title>
+  <meta name="description" content="腾讯云 Elasticsearch Service 核心知识点完整索引，支持搜索和分类筛选，快速定位所需知识。">
+  <meta name="keywords" content="腾讯云,Elasticsearch,ES,索引,搜索,分类,知识目录">
+  <meta name="author" content="腾讯云 ES 知识工坊">
+  <meta name="language" content="zh-CN">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://learn-es.vercel.app/roots.html">
+  <meta property="og:title" content="知识索引 - 腾讯云 ES 知识工坊">
+  <meta property="og:description" content="腾讯云 ES 核心知识点完整索引，支持搜索和分类筛选">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://learn-es.vercel.app/roots.html">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FBBF24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/minimal.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">🔍 腾讯云 ES 知识工坊</a>
+      <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links">
+        <a href="learn.html" class="nav-link">学习</a>
+        <a href="flashcard.html" class="nav-link">闪卡</a>
+        <a href="roots.html" class="nav-link active">索引</a>
+        <a href="progress.html" class="nav-link">进度</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="page-header">
+      <h1>知识索引</h1>
+      <p>浏览和搜索全部 150 个核心知识点</p>
+    </div>
+
+    <div class="container-wide">
+      <div class="search-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="搜索知识点名称、描述或关键词..." oninput="searchRoots()">
+      </div>
+
+      <div id="filterContainer" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
+
+      <div class="text-center" style="color:var(--color-text-secondary);font-size:0.875rem;margin-bottom:24px;" id="statsText">显示 150 个知识点</div>
+
+      <div class="roots-grid" id="rootsGrid"></div>
+
+      <div class="empty-state" id="noResults" style="display:none;">
+        <h3>未找到匹配的知识点</h3>
+        <p>请尝试其他搜索词或筛选条件</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/wordData.js"></script>
+  <script src="js/storage.js"></script>
+  <script>
+    (function() {
+      var activeFilter = 'all';
+
+      function getOrigins() {
+        var origins = [];
+        WordRoots.forEach(function(root) {
+          if (origins.indexOf(root.origin) === -1) origins.push(root.origin);
+        });
+        return origins;
+      }
+
+      function renderFilters() {
+        var container = document.getElementById('filterContainer');
+        if (!container) return;
+        container.innerHTML = '';
+        var allBtn = document.createElement('button');
+        allBtn.className = 'filter-btn active';
+        allBtn.textContent = '全部知识点';
+        allBtn.onclick = function() { activeFilter = 'all'; applyFilters(); updateFilterUI(); };
+        container.appendChild(allBtn);
+
+        getOrigins().forEach(function(origin) {
+          var btn = document.createElement('button');
+          btn.className = 'filter-btn';
+          btn.textContent = origin;
+          btn.onclick = function() { activeFilter = origin; applyFilters(); updateFilterUI(); };
+          container.appendChild(btn);
+        });
+      }
+
+      function updateFilterUI() {
+        document.querySelectorAll('#filterContainer .filter-btn').forEach(function(btn) {
+          var isActive = (activeFilter === 'all' && btn.textContent === '全部知识点') || btn.textContent === activeFilter;
+          btn.className = isActive ? 'filter-btn active' : 'filter-btn';
+        });
+      }
+
+      function renderRoots(roots) {
+        var container = document.getElementById('rootsGrid');
+        var noResults = document.getElementById('noResults');
+        var statsText = document.getElementById('statsText');
+        if (!container) return;
+
+        if (roots.length === 0) {
+          container.innerHTML = '';
+          if (noResults) noResults.style.display = 'block';
+          if (statsText) statsText.textContent = '未找到匹配的知识点';
+          return;
+        }
+
+        if (noResults) noResults.style.display = 'none';
+        if (statsText) statsText.textContent = '显示 ' + roots.length + ' 个知识点';
+
+        container.innerHTML = '';
+        roots.forEach(function(root) {
+          var mastered = isMastered(root.id);
+          var card = document.createElement('div');
+          card.className = 'root-card' + (mastered ? ' mastered' : '');
+          card.onclick = function() { window.location.href = 'root-detail.html?id=' + root.id; };
+
+          var nameDiv = document.createElement('div');
+          nameDiv.className = 'root-name';
+          nameDiv.textContent = (mastered ? '★ ' : '') + root.root;
+
+          var meaningDiv = document.createElement('div');
+          meaningDiv.className = 'root-meaning';
+          meaningDiv.textContent = root.meaning;
+
+          var descDiv = document.createElement('div');
+          descDiv.className = 'root-desc';
+          descDiv.textContent = root.description;
+
+          var metaDiv = document.createElement('div');
+          metaDiv.style.marginTop = '12px';
+          var originSpan = document.createElement('span');
+          originSpan.className = 'root-origin';
+          originSpan.textContent = root.origin;
+          metaDiv.appendChild(originSpan);
+
+          if (mastered) {
+            var badge = document.createElement('span');
+            badge.className = 'mastered-badge';
+            badge.textContent = '✓ 已掌握';
+            metaDiv.appendChild(badge);
+          }
+
+          card.appendChild(nameDiv);
+          card.appendChild(meaningDiv);
+          card.appendChild(descDiv);
+          card.appendChild(metaDiv);
+          container.appendChild(card);
+        });
+      }
+
+      function applyFilters() {
+        var query = (document.getElementById('searchInput').value || '').toLowerCase();
+        var filtered = WordRoots.filter(function(root) {
+          var matchCategory = activeFilter === 'all' || root.origin === activeFilter;
+          var matchSearch = !query ||
+            root.root.toLowerCase().indexOf(query) >= 0 ||
+            root.meaning.toLowerCase().indexOf(query) >= 0 ||
+            root.description.toLowerCase().indexOf(query) >= 0 ||
+            root.origin.toLowerCase().indexOf(query) >= 0;
+          return matchCategory && matchSearch;
+        });
+        renderRoots(filtered);
+      }
+
+      window.searchRoots = applyFilters;
+
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+          e.preventDefault();
+          document.getElementById('searchInput').focus();
+        }
+        if (e.key === 'Escape') {
+          var input = document.getElementById('searchInput');
+          if (input === document.activeElement) {
+            input.value = '';
+            applyFilters();
+            input.blur();
+          }
+        }
+      });
+
+      window.addEventListener('masteredChanged', function() { applyFilters(); });
+
+      renderFilters();
+      renderRoots(WordRoots);
+    })();
+  </script>
+</body>
+</html>

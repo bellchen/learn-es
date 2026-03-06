@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>渐进学习 - 腾讯云 ES 知识工坊</title>
+  <meta name="description" content="逐步学习腾讯云 Elasticsearch Service 的 150 个核心知识点，包含详细说明、案例和测试题。">
+  <meta name="keywords" content="腾讯云,Elasticsearch,ES,学习,渐进式学习,搜索引擎">
+  <meta name="author" content="腾讯云 ES 知识工坊">
+  <meta name="language" content="zh-CN">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://learn-es.vercel.app/learn.html">
+  <meta property="og:title" content="渐进学习 - 腾讯云 ES 知识工坊">
+  <meta property="og:description" content="逐步学习腾讯云 Elasticsearch Service 的 150 个核心知识点">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://learn-es.vercel.app/learn.html">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FBBF24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/minimal.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">🔍 腾讯云 ES 知识工坊</a>
+      <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links">
+        <a href="learn.html" class="nav-link active">学习</a>
+        <a href="flashcard.html" class="nav-link">闪卡</a>
+        <a href="roots.html" class="nav-link">索引</a>
+        <a href="progress.html" class="nav-link">进度</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="learn-container">
+    <div class="learn-header">
+      <h1 class="learn-title" id="rootName">-</h1>
+      <div class="learn-meta">
+        <span class="root-origin" id="rootOrigin">-</span>
+        <span class="mastered-badge" id="masteredBadge" style="display:none;">✓ 已掌握</span>
+      </div>
+      <p class="learn-description" id="rootMeaning" style="margin-top:16px;">-</p>
+    </div>
+
+    <section class="learn-section">
+      <h3>详细说明</h3>
+      <p class="learn-description" id="rootDescription">-</p>
+    </section>
+
+    <section class="learn-section">
+      <h3>实践案例</h3>
+      <div id="examplesContainer"></div>
+    </section>
+
+    <section class="quiz-section" id="quizSection">
+      <h3 style="margin-bottom:16px;">知识检验</h3>
+      <p class="quiz-question" id="quizQuestion">-</p>
+      <div class="quiz-options" id="quizOptions"></div>
+      <div class="quiz-result hidden" id="quizResult"></div>
+    </section>
+
+    <div class="learn-nav">
+      <button class="btn btn-secondary" id="prevBtn" onclick="prevRoot()">← 上一个</button>
+      <div class="learn-mastered-toggle">
+        <label>
+          <input type="checkbox" id="masteredCheckbox" onchange="toggleMaster()">
+          已掌握此知识点
+        </label>
+      </div>
+      <button class="btn btn-primary" id="nextBtn" onclick="nextRoot()">下一个 →</button>
+    </div>
+
+    <div class="flashcard-progress">
+      <span id="progressText">1 / 150</span>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/wordData.js"></script>
+  <script src="js/storage.js"></script>
+  <script>
+    (function() {
+      var currentIndex = 0;
+      var totalItems = WordRoots.length;
+
+      function showToast(message) {
+        var toast = document.getElementById('toast');
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 2000);
+      }
+
+      function getStartIndex() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var id = urlParams.get('id');
+        if (id) {
+          var index = WordRoots.findIndex(function(item) { return item.id == id; });
+          return index >= 0 ? index : 0;
+        }
+        var progress = StorageManager.getProgress();
+        return progress.currentRootIndex || 0;
+      }
+
+      function loadRoot(index) {
+        var safeIndex = ((index % totalItems) + totalItems) % totalItems;
+        currentIndex = safeIndex;
+        var root = WordRoots[safeIndex];
+        var mastered = isMastered(root.id);
+
+        document.getElementById('rootName').textContent = root.root;
+        document.getElementById('rootOrigin').textContent = root.origin;
+        document.getElementById('rootMeaning').textContent = root.meaning;
+        document.getElementById('rootDescription').textContent = root.description;
+        document.getElementById('masteredBadge').style.display = mastered ? 'inline-block' : 'none';
+        document.getElementById('masteredCheckbox').checked = mastered;
+
+        renderExamples(root.examples);
+        renderQuiz(root.quiz, root);
+        updateProgressUI();
+        markItemVisited(root.id);
+        StorageManager.updateProgress(safeIndex);
+
+        var prevBtn = document.getElementById('prevBtn');
+        var nextBtn = document.getElementById('nextBtn');
+        prevBtn.disabled = currentIndex === 0;
+        prevBtn.style.opacity = currentIndex === 0 ? '0.5' : '1';
+
+        if (currentIndex === totalItems - 1) {
+          nextBtn.textContent = '完成学习 ✓';
+          nextBtn.onclick = function() {
+            showToast('恭喜！您已完成所有知识点的学习！');
+            setTimeout(function() { window.location.href = 'progress.html'; }, 1500);
+          };
+        } else {
+          nextBtn.textContent = '下一个 →';
+          nextBtn.onclick = function() { nextRoot(); };
+        }
+      }
+
+      function renderExamples(examples) {
+        var container = document.getElementById('examplesContainer');
+        if (!container) return;
+        container.innerHTML = '';
+        examples.forEach(function(ex) {
+          var card = document.createElement('div');
+          card.className = 'example-card';
+          card.innerHTML = '<div class="example-word">' + ex.word + '</div>' +
+            '<div class="example-meaning">' + ex.meaning + '</div>' +
+            '<div class="example-explanation">' + ex.explanation + '</div>';
+          container.appendChild(card);
+        });
+      }
+
+      function renderQuiz(quiz, root) {
+        var questionEl = document.getElementById('quizQuestion');
+        var optionsEl = document.getElementById('quizOptions');
+        var resultEl = document.getElementById('quizResult');
+        if (!questionEl || !optionsEl) return;
+        questionEl.textContent = quiz.question;
+        optionsEl.innerHTML = '';
+        if (resultEl) { resultEl.className = 'quiz-result hidden'; resultEl.textContent = ''; }
+        quiz.options.forEach(function(option, index) {
+          var button = document.createElement('button');
+          button.className = 'quiz-option';
+          button.textContent = option;
+          button.onclick = function() { checkAnswer(index, quiz, root); };
+          optionsEl.appendChild(button);
+        });
+      }
+
+      function checkAnswer(selectedIndex, quiz, root) {
+        var isCorrect = selectedIndex === quiz.correctAnswer;
+        var options = document.querySelectorAll('.quiz-option');
+        var resultEl = document.getElementById('quizResult');
+        options.forEach(function(btn, index) {
+          btn.disabled = true;
+          if (index === quiz.correctAnswer) btn.classList.add('correct');
+          else if (index === selectedIndex && !isCorrect) btn.classList.add('wrong');
+        });
+        saveQuizResult(root.id, isCorrect, selectedIndex, quiz.correctAnswer);
+        setTimeout(function() {
+          if (resultEl) {
+            resultEl.className = 'quiz-result ' + (isCorrect ? 'correct' : 'incorrect');
+            resultEl.textContent = isCorrect ? '✓ 回答正确！' : '✗ 回答错误。正确答案是 ' + String.fromCharCode(65 + quiz.correctAnswer);
+          }
+          if (isCorrect && !isMastered(root.id)) {
+            saveMastered(root.id, true);
+            document.getElementById('masteredCheckbox').checked = true;
+            document.getElementById('masteredBadge').style.display = 'inline-block';
+            showToast('已自动标记为已掌握 ✓');
+          }
+        }, 300);
+      }
+
+      function updateProgressUI() {
+        var progressText = document.getElementById('progressText');
+        var progressBar = document.getElementById('progressBar');
+        if (progressText) progressText.textContent = (currentIndex + 1) + ' / ' + totalItems;
+        if (progressBar) progressBar.style.width = ((currentIndex + 1) / totalItems * 100) + '%';
+      }
+
+      window.nextRoot = function() { loadRoot(currentIndex + 1); window.scrollTo(0, 0); };
+      window.prevRoot = function() { if (currentIndex > 0) { loadRoot(currentIndex - 1); window.scrollTo(0, 0); } };
+      window.toggleMaster = function() {
+        var root = WordRoots[currentIndex];
+        var checkbox = document.getElementById('masteredCheckbox');
+        saveMastered(root.id, checkbox.checked);
+        document.getElementById('masteredBadge').style.display = checkbox.checked ? 'inline-block' : 'none';
+      };
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft' && currentIndex > 0) window.prevRoot();
+        if (e.key === 'ArrowRight' && currentIndex < totalItems - 1) window.nextRoot();
+        if (e.key === ' ') {
+          e.preventDefault();
+          var checkbox = document.getElementById('masteredCheckbox');
+          checkbox.checked = !checkbox.checked;
+          toggleMaster();
+        }
+      });
+
+      currentIndex = getStartIndex();
+      loadRoot(currentIndex);
+    })();
+  </script>
+</body>
+</html>
